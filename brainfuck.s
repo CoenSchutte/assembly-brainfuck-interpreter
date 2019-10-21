@@ -10,7 +10,7 @@ format_str: .asciz "We should be executing the following code:\n%s\n"
 pointvalue: .asciz "The value of the pointer is: %d\n"
 pointloc: .asciz "The locpointer is: %d\n"
 test_str: .asciz "%c\n"
-bfoutput: .asciz "hey im output %c \n"
+bfoutput: .asciz "%d\n"
 bfinput: .asciz "hey im input %c \n"
 
 # Your brainfuck subroutine will receive one argument:
@@ -33,16 +33,14 @@ brainfuck:
 	#index of our array
 	movq $0, %rbx
 
-	#debug <3	
-	movq $0, %r14
 
 	movq $50000, %r13
 	movq $0, %rdx
 
 # loop through te brainfuck code
 compare:	
-	cmpq %r13, %r14
-	jl printloop
+	cmpq $0, %r13
+	jge printloop
 
 elseprint:
 	movq %rbp, %rsp
@@ -61,11 +59,6 @@ printloop:
 	je end
 
 
-	#print the character
-	movzb %r15b, %rsi
-	movq $test_str, %rdi
-	call printf
-	movq $0, %rax
 
 
 	#we compare here
@@ -93,6 +86,12 @@ printloop:
 	#cmpb $44 , %r15b
 	#je foundcomma
 
+	# [ sign 
+	cmpb $91 , %r15b
+	je foundleft
+
+	cmpb $93 , %r15b
+	je foundright
 
 	jmp compare
 
@@ -102,46 +101,22 @@ printloop:
 	ret
 
 foundplus:
-	movq myarray(%rbx), %rdx
-	incq myarray(%rbx)	
-	movq myarray(%rbx), %rdx
 
-	#print the character
-	xorq %rsi, %rsi
-	movb myarray(%rbx), %sil			
-	movq $pointvalue, %rdi
-	call printf
-	movq $0, %rax
+	incq myarray(%rbx)	
+
+
+
 
 	jmp printloop
 
 foundminus:
-	movq myarray(%rbx), %rdx
-	decq myarray(%rbx)
-	movq myarray(%rbx), %rdx
 
-	#print the character
-	xorq %rsi, %rsi
-	movb myarray(%rbx), %sil			
-	movq $pointvalue, %rdi
-	call printf
-	movq $0, %rax
+	decq myarray(%rbx)
 
 	jmp printloop
 
 foundgreater:
 	incq %rbx
-
-	movq %rbx, %rsi
-	movq $pointloc, %rdi
-	call printf
-	movq $0, %rax
-
-	xorq %rsi, %rsi
-	movb myarray(%rbx), %sil
-	movq $pointvalue, %rdi
-	call printf
-	movq $0, %rax
 
 	jmp printloop
 
@@ -149,26 +124,44 @@ foundsmaller:
 	decq %rbx
 
 
-	movq %rbx, %rsi
-	movq $pointloc, %rdi
-	call printf
-	movq $0, %rax
-
-	xorq %rsi, %rsi
-	movb myarray(%rbx), %sil
-	movq $pointvalue, %rdi
-	call printf
-	movq $0, %rax
-
 	jmp printloop
 
 founddot:
-	movq myarray(%rbx), %rsi
+
+	xorq %rsi, %rsi
+	movb myarray(%rbx), %sil
 	movq $bfoutput, %rdi
 	call printf
 	movq $0, %rax
 
 	jmp printloop
+
+foundleft:
+	
+	cmpq $0, myarray(%rbx)
+	je findright
+
+	push %rbx
+	jmp printloop
+
+foundright:
+	popq %rbx
+	jmp printloop
+
+findright:
+
+	cmpb $93, %r15b
+	je printloop
+
+	incq %rbx
+
+	#store the bit value of the character into r15b
+	movb (%r12), %r15b
+
+	jmp findright
+
+
+
 
 
 end:
