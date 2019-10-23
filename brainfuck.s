@@ -10,7 +10,7 @@ format_str: .asciz "We should be executing the following code:\n%s\n"
 pointvalue: .asciz "The value of the pointer is: %d\n"
 pointloc: .asciz "The locpointer is: %d\n"
 test_str: .asciz "%c\n"
-bfoutput: .asciz "%d\n"
+bfoutput: .asciz "%c"
 bfinput: .asciz "hey im input %c \n"
 
 # Your brainfuck subroutine will receive one argument:
@@ -32,6 +32,7 @@ brainfuck:
 
 	#index of our array
 	movq $0, %rbx
+
 
 
 	movq $50000, %r13
@@ -104,9 +105,6 @@ foundplus:
 
 	incq myarray(%rbx)	
 
-
-
-
 	jmp printloop
 
 foundminus:
@@ -123,7 +121,6 @@ foundgreater:
 foundsmaller:
 	decq %rbx
 
-
 	jmp printloop
 
 founddot:
@@ -137,15 +134,20 @@ founddot:
 	jmp printloop
 
 foundleft:
-	
-	cmpq $0, myarray(%rbx)
+	incq myarray(%rbx)
+	cmpb $0, myarray(%rbx)
 	je findright
 
-	push %rbx
+	
+	push %r12
 	jmp printloop
 
 foundright:
-	popq %rbx
+	cmpb $0, myarray(%rbx)
+	je printloop
+	
+	popq %r12
+	pushq %r12
 	jmp printloop
 
 findright:
@@ -153,14 +155,12 @@ findright:
 	cmpb $93, %r15b
 	je printloop
 
-	incq %rbx
+	incq %r12
 
 	#store the bit value of the character into r15b
 	movb (%r12), %r15b
 
 	jmp findright
-
-
 
 
 
