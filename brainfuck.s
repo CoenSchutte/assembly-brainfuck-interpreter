@@ -33,7 +33,8 @@ brainfuck:
 	#index of our array
 	movq $0, %rbx
 
-
+	#the cool way to set r14 to 0
+	xorq %r14, %r14
 
 	movq $50000, %r13
 	movq $0, %rdx
@@ -50,17 +51,16 @@ elseprint:
 
 # print each brainfuck character
 printloop:
-	incq %r12
 
 	#store the bit value of the character into r15b
 	movb (%r12), %r15b
 
+	#go to the next char
+	incq %r12
+
 	#check if we reached the end of the file
 	cmpb $0, %r15b	
 	je end
-
-
-
 
 	#we compare here
 	# + sign
@@ -91,40 +91,31 @@ printloop:
 	cmpb $91 , %r15b
 	je foundleft
 
+	# ] sign
 	cmpb $93 , %r15b
 	je foundright
 
+	# unknown character -> go next 
 	jmp compare
 
-	#end of stackframe
-	movq %rbp, %rsp
-	popq %rbp
-	ret
-
 foundplus:
-
 	incq myarray(%rbx)	
-
 	jmp printloop
 
 foundminus:
-
 	decq myarray(%rbx)
-
 	jmp printloop
 
 foundgreater:
 	incq %rbx
-
 	jmp printloop
 
 foundsmaller:
 	decq %rbx
-
 	jmp printloop
 
 founddot:
-
+	# the cool way of printing
 	xorq %rsi, %rsi
 	movb myarray(%rbx), %sil
 	movq $bfoutput, %rdi
@@ -134,36 +125,47 @@ founddot:
 	jmp printloop
 
 foundleft:
-	incq myarray(%rbx)
+	# increment our bracket counter
+	incq %r14
+
+	# If the value is zero we look for a corresponding ]
 	cmpb $0, myarray(%rbx)
 	je findright
 
-	
+	#If not we store the location of the [ and go to the next character
 	push %r12
 	jmp printloop
 
 foundright:
+	decq %r14
+
+	#should we find the value 0 then we evaluate the next character by jumping to our loop
 	cmpb $0, myarray(%rbx)
 	je printloop
 	
-	popq %r12
+	# when the value is not 0 we pop the location of our 
+	# corresponding [ in r12 and store it back on the stack again
+	popq %r12 			
 	pushq %r12
 	jmp printloop
 
 findright:
+	
+	# go to the next char
+	incq %r12
 
+	# check if we found a ]
 	cmpb $93, %r15b
 	je printloop
-
-	incq %r12
 
 	#store the bit value of the character into r15b
 	movb (%r12), %r15b
 
+	#calls itself to find the next ]
 	jmp findright
 
 
-
+# rip brainfuck
 end:
 	movq %rbp, %rsp
 	popq %rbp
