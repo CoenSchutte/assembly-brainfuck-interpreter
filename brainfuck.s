@@ -125,27 +125,25 @@ founddot:
 	jmp printloop
 
 foundleft:
-	# increment our bracket counter
-	incq %r14
-
-	# If the value is zero we look for a corresponding ]
-	cmpb $0, myarray(%rbx)
-	je findright
-
-	#If not we store the location of the [ and go to the next character
+	# store the location of the [ and go to the next character
 	push %r12
 	jmp printloop
 
 foundright:
-	decq %r14
 
-	#should we find the value 0 then we evaluate the next character by jumping to our loop
+	# should we find the value 0 then we evaluate the next character by jumping to our loop
 	cmpb $0, myarray(%rbx)
 	je printloop
 	
-	# when the value is not 0 we pop the location of our 
-	# corresponding [ in r12 and store it back on the stack again
-	popq %r12 			
+	popq %r12 
+
+	# THIS IS ALWAY TRUE SO THIS MAKES IT BROKE DEAD RIP
+	cmpb $0, myarray(%rbx)
+	jne foundrightfalse
+
+	jmp printloop
+
+	foundrightfalse:			
 	pushq %r12
 	jmp printloop
 
@@ -158,10 +156,10 @@ findright:
 	cmpb $93, %r15b
 	je printloop
 
-	#store the bit value of the character into r15b
+	# store the bit value of the character into r15b
 	movb (%r12), %r15b
 
-	#calls itself to find the next ]
+	# calls itself to find the next ]
 	jmp findright
 
 
