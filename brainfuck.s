@@ -1,13 +1,14 @@
 # caschutte & ebdemir
-# brainfuck stuck infinite loop when nested loop with single operation?
+
 .bss
-myarray: .skip 500000
+myarray: .skip 50000000
 
 .global brainfuck
 
 .text
 format_str: .asciz "We should be executing the following code:\n%s\n"
 bfoutput: .asciz "%c"
+test1: .asciz	 " %ld \n"
 
 
 # Your brainfuck subroutine will receive one argument:
@@ -32,7 +33,7 @@ brainfuck:
 	#the cool way to set r14 to 0
 	xorq %r14, %r14
 
-	movq $500000, %r13
+	movq $50000000, %r13
 
 
 # loop through te brainfuck code
@@ -50,6 +51,11 @@ printloop:
 
 	#store the bit value of the character into r15b
 	movb (%r12), %r15b
+
+	movq %rbx, %rsi
+	movq $test1, %rdi
+	movq $0, %rax
+	call printf
 
 	#go to the next char
 	incq %r12
@@ -101,6 +107,7 @@ foundplus:
 
 # Decrements the value the pointer is pointing at
 foundminus:
+
 	decq myarray(%rbx)
 	jmp printloop
 
@@ -111,6 +118,7 @@ foundgreater:
 
 # Deccrements the pointer
 foundsmaller:
+
 	decq %rbx
 	jmp printloop
 
@@ -120,15 +128,22 @@ founddot:
 	xorq %rsi, %rsi
 	movb myarray(%rbx), %sil
 	movq $bfoutput, %rdi
-	call printf
 	xorq %rax, %rax
+	call printf
+
 
 	jmp printloop
 
 # pushes the location of the [ to the stack
 foundleft:
-	# store the location of the [ and go to the next character
 	push %r12
+
+	cmpb $0, myarray(%rbx)
+	je findright
+	
+	
+	# store the location of the [ and go to the next character
+	
 	jmp printloop
 
 foundright:
@@ -143,8 +158,21 @@ foundright:
 
 	popq %r12 			
 	pushq %r12
-	
+
 	jmp printloop
+
+
+findright:
+
+	incq %r12
+	movb (%r12), %r15b
+	
+	# ] sign
+	cmpb $93, %r15b
+	je foundright
+
+	jmp findright
+
 
 thing:
 	popq %r12
