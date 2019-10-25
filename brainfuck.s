@@ -1,22 +1,18 @@
 # caschutte & ebdemir
-
+# brainfuck stuck infinite loop when nested loop with single operation?
 .bss
-myarray: .skip 20000
+myarray: .skip 500000
 
 .global brainfuck
 
 .text
 format_str: .asciz "We should be executing the following code:\n%s\n"
-pointvalue: .asciz "The value of the pointer is: %d\n"
-pointloc: .asciz "The locpointer is: %d\n"
-test_str: .asciz "%c\n"
 bfoutput: .asciz "%c"
-bfinput: .asciz "hey im input %c \n"
+
 
 # Your brainfuck subroutine will receive one argument:
 # a zero termianted string containing the code to execute.
 
-# $']  used to compare stuff
 
 brainfuck:
 	#create a stackframe
@@ -28,16 +24,16 @@ brainfuck:
 	movq %rdi, %rsi
 	movq $format_str, %rdi
 	call printf
-	movq $0, %rax
+	xorq %rax, %rax
 
 	#index of our array
-	movq $0, %rbx
+	xorq %rbx, %rbx
 
 	#the cool way to set r14 to 0
 	xorq %r14, %r14
 
-	movq $50000, %r13
-	movq $0, %rdx
+	movq $500000, %r13
+
 
 # loop through te brainfuck code
 compare:	
@@ -68,19 +64,19 @@ printloop:
 	je foundplus
 
 	# - sign
-	cmpb $45 , %r15b
+	cmpb $45, %r15b
 	je foundminus
 
 	# > sign
-	cmpb $62 , %r15b
+	cmpb $62, %r15b
 	je foundgreater
 
 	# < sign
-	cmpb $60 , %r15b
+	cmpb $60, %r15b
 	je foundsmaller
 
 	# . sign 
-	cmpb $46 , %r15b
+	cmpb $46, %r15b
 	je founddot
 
 	# , sign
@@ -88,42 +84,48 @@ printloop:
 	#je foundcomma
 
 	# [ sign 
-	cmpb $91 , %r15b
+	cmpb $91, %r15b
 	je foundleft
 
 	# ] sign
-	cmpb $93 , %r15b
+	cmpb $93, %r15b
 	je foundright
 
 	# unknown character -> go next 
 	jmp compare
 
+# Increments the value the pointer is pointing at
 foundplus:
 	incq myarray(%rbx)	
 	jmp printloop
 
+# Decrements the value the pointer is pointing at
 foundminus:
 	decq myarray(%rbx)
 	jmp printloop
 
+# Increments the pointer
 foundgreater:
 	incq %rbx
 	jmp printloop
 
+# Deccrements the pointer
 foundsmaller:
 	decq %rbx
 	jmp printloop
 
+# Prints the value the pointer is pointing at
 founddot:
 	# the cool way of printing
 	xorq %rsi, %rsi
 	movb myarray(%rbx), %sil
 	movq $bfoutput, %rdi
 	call printf
-	movq $0, %rax
+	xorq %rax, %rax
 
 	jmp printloop
 
+# pushes the location of the [ to the stack
 foundleft:
 	# store the location of the [ and go to the next character
 	push %r12
@@ -135,33 +137,19 @@ foundright:
 	cmpb $0, myarray(%rbx)
 	je printloop
 	
-	popq %r12 
+	# If we are in the final iteration of the loop, we jump so we dont push again
+	cmpb $1, myarray(%rbx)
+	je thing
 
-	# THIS IS ALWAY TRUE SO THIS MAKES IT BROKE DEAD RIP
-	cmpb $0, myarray(%rbx)
-	jne foundrightfalse
-
-	jmp printloop
-
-	foundrightfalse:			
+	popq %r12 			
 	pushq %r12
+	
 	jmp printloop
 
-findright:
-	
-	# go to the next char
-	incq %r12
+thing:
+	popq %r12
 
-	# check if we found a ]
-	cmpb $93, %r15b
-	je printloop
-
-	# store the bit value of the character into r15b
-	movb (%r12), %r15b
-
-	# calls itself to find the next ]
-	jmp findright
-
+	jmp printloop
 
 # rip brainfuck
 end:
