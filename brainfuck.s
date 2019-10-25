@@ -35,6 +35,8 @@ brainfuck:
 
 	movq $50000000, %r13
 
+	movq $0, %r14
+
 
 # loop through te brainfuck code
 compare:	
@@ -49,16 +51,15 @@ elseprint:
 # print each brainfuck character
 printloop:
 
+
+
 	#store the bit value of the character into r15b
 	movb (%r12), %r15b
 
-	movq %rbx, %rsi
-	movq $test1, %rdi
-	movq $0, %rax
-	call printf
 
 	#go to the next char
 	incq %r12
+
 
 	#check if we reached the end of the file
 	cmpb $0, %r15b	
@@ -136,14 +137,12 @@ founddot:
 
 # pushes the location of the [ to the stack
 foundleft:
+	cmpb $0, myarray(%rbx)
+	je skip 
+	
 	push %r12
 
-	cmpb $0, myarray(%rbx)
-	je findright
-	
-	
 	# store the location of the [ and go to the next character
-	
 	jmp printloop
 
 foundright:
@@ -152,32 +151,38 @@ foundright:
 	cmpb $0, myarray(%rbx)
 	je printloop
 	
-	# If we are in the final iteration of the loop, we jump so we dont push again
-	cmpb $1, myarray(%rbx)
+
+	cmpq $0, %r14
 	je thing
 
 	popq %r12 			
-	pushq %r12
 
 	jmp printloop
-
-
-findright:
-
-	incq %r12
-	movb (%r12), %r15b
-	
-	# ] sign
-	cmpb $93, %r15b
-	je foundright
-
-	jmp findright
 
 
 thing:
 	popq %r12
-
+	pushq %r12
 	jmp printloop
+
+skip:
+	
+	incq %r12
+
+	movb (%r12), %r15b
+
+	cmpb $91, %r15b
+	incq %r14
+
+	cmpb $93, %r15b
+	decq %r14
+
+	cmpq $0, %r14
+	je printloop
+
+	jmp skip
+	
+
 
 # rip brainfuck
 end:
