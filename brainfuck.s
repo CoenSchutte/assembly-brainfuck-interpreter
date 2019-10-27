@@ -101,6 +101,41 @@ printloop:
 	# unknown character -> go next 
 	jmp compare
 
+
+thing:
+	popq %r12
+	pushq %r12
+	jmp printloop
+
+
+skip:
+	
+	incq %r12
+
+	movb (%r12), %r15b
+
+	cmpb $91, %r15b
+	je inc14
+
+	cmpb $93, %r15b
+	je dec14
+
+	cmpq $0, %r14
+	je printloop
+
+	jmp skip
+
+inc14:
+	incq %r14
+	jmp skip
+
+dec14:
+	decq %r14
+	cmpq $0, %r14
+	je printloop
+	jmp skip
+		
+
 # Increments the value the pointer is pointing at
 foundplus:
 	incq myarray(%rbx)	
@@ -138,7 +173,7 @@ founddot:
 # pushes the location of the [ to the stack
 foundleft:
 	cmpb $0, myarray(%rbx)
-	je skip 
+	je skip
 	
 	push %r12
 
@@ -152,36 +187,15 @@ foundright:
 	je printloop
 	
 
-	cmpq $0, %r14
-	je thing
+	cmpq $1, myarray(%rbx)
+	jne thing
 
 	popq %r12 			
 
 	jmp printloop
 
 
-thing:
-	popq %r12
-	pushq %r12
-	jmp printloop
 
-skip:
-	
-	incq %r12
-
-	movb (%r12), %r15b
-
-	cmpb $91, %r15b
-	incq %r14
-
-	cmpb $93, %r15b
-	decq %r14
-
-	cmpq $0, %r14
-	je printloop
-
-	jmp skip
-	
 
 
 # rip brainfuck
