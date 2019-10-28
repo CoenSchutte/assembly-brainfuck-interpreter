@@ -30,7 +30,7 @@ brainfuck:
 	xorq %rax, %rax
 
 	#index of our array set to 0 in a fancy way
-	movq $0, %r15
+	xorq %r15, %r15
 
 	jmp printloop
 
@@ -94,22 +94,24 @@ foundcomma:
 	pushq %rbp
 	movq %rsp, %rbp
 
-	    #Scan for a number
-        subq $8, %rsp                   # increase the stack by 8
-        leaq -8(%rbp), %rsi             # move the base pointer to rsi load effective address
-        movq $bfinput, %rdi           	# move the string format for scanf to rdi
-        movq $0, %rax
-        call scanf                      # scans for a number 
+	#Scan for a number
+    subq $8, %rsp                   # increase the stack by 8
+    leaq -8(%rbp), %rsi             # move the base pointer to rsi load effective address
+    movq $bfinput, %rdi           	# move the string format for scanf to rdi
+    movq $0, %rax
+    call scanf                      # scans for a number 
 
-		movb -8(%rbp), %bl
-		movb %bl, myarray(%r15)
-		popq %rbx
+	#Stores the input in a proper way
+	movb -8(%rbp), %bl
+	movb %bl, myarray(%r15)
+	popq %rbx
 
+	#close the stackframe
 	movq %rbp, %rsp
 	popq %rbp
 
-		incq %r12
-		jmp printloop
+	incq %r12
+	jmp printloop
 
 
 # Increments the value the pointer is pointing at
@@ -139,7 +141,7 @@ foundsmaller:
 
 # Prints the value the pointer is pointing at
 founddot:
-	movq $0, %rax
+	xorq %rax, %rax
 	movq myarray(%r15), %rsi
 	movq $bfoutput, %rdi
 	call printf
@@ -151,20 +153,35 @@ founddot:
 foundleft:
 
 	cmpb $0, myarray(%r15)
-	je start_counter
+	je start_skip
 
+	#Stack allignment is cool, we need this for the comma to work
 	pushq %r12
 	pushq %r12
 
 	incq %r12
 	jmp printloop
 
+# we found a right bracket and check if it matches
+foundright:
+	cmpb $0, myarray(%r15)
+	je happy_stack
+
+	#Stack allignment is cool, we need this for the comma to work
+	popq %r12
+	popq %r12
+	push %r12
+	push %r12
+
+	incq %r12
+	jmp printloop
+
 # initializes our counter
-start_counter:
+start_skip:
 	movq $1, %r14
 
 #counts the amount of brackets
-counter:
+skip:
 	cmpq $0, %r14
 	je next
 
@@ -178,7 +195,7 @@ counter:
 	cmpb $93, %r11b
 	je dec14
 
-	jmp counter
+	jmp skip
 
 next:
 	incq %r12
@@ -187,28 +204,16 @@ next:
 # increment our bracket counter
 inc14:
 	incq %r14
-	jmp counter
+	jmp skip
 
 # decrement our bracket counter
 dec14:
 	decq %r14
-	jmp counter
-
-# we found a right bracket and check if it matches
-foundright:
-	cmpb $0, myarray(%r15)
-	je happy_stack
-
-	popq %r12
-	popq %r12
-	push %r12
-	push %r12
-
-	incq %r12
-	jmp printloop
+	jmp skip
 
 # makes the stack happy :)
 happy_stack:
+	#Stack allignment is cool, we need this for the comma to work
 	popq %rbx
 	popq %rbx
 
