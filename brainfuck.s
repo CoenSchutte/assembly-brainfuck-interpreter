@@ -6,6 +6,7 @@
 .text
 format_str: .asciz "We should be executing the following code:\n%s\n"
 bfoutput: .asciz "%c"
+bfinput: .asciz "%c"
 
 .data
 myarray: 
@@ -73,6 +74,10 @@ first_action:
 	cmpb $46, %r11b
 	je founddot
 
+	# , sign
+	cmpb $44, %r11b
+	je foundcomma
+
 	# [ sign 
 	cmpb $91, %r11b
 	je foundleft
@@ -83,6 +88,29 @@ first_action:
 
 	jmp next_action
 		
+
+foundcomma:
+
+	#create a stackframe
+	pushq %rbp
+	movq %rsp, %rbp
+
+	    #Scan for a number
+        subq $8, %rsp                   # increase the stack by 8
+        leaq -8(%rbp), %rsi             # move the base pointer to rsi load effective address
+        movq $bfinput, %rdi           	# move the string format for scanf to rdi
+        movq $0, %rax
+        call scanf                      # scans for a number 
+
+		movb -8(%rbp), %bl
+		movb %bl, myarray(%r15)
+		popq %rbx
+
+	movq %rbp, %rsp
+	popq %rbp
+
+		jmp next_action
+
 
 # Increments the value the pointer is pointing at
 foundplus:
@@ -120,6 +148,7 @@ foundleft:
 	cmpb $0, myarray(%r15)
 	je start_counter
 
+	pushq %r12
 	pushq %r12
 	jmp next_action
 
@@ -160,12 +189,15 @@ loop_end:
 	je happy_stack
 
 	popq %r12
+	popq %r12
+	push %r12
 	push %r12
 
 	jmp next_action
 
 # makes the stack happy
 happy_stack:
+	popq %rbx
 	popq %rbx
 	jmp next_action
 
