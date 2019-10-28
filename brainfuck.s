@@ -8,8 +8,6 @@ myarray: .skip 50000000
 .text
 format_str: .asciz "We should be executing the following code:\n%s\n"
 bfoutput: .asciz "%c"
-test1: .asciz	 " %ld \n"
-
 
 # Your brainfuck subroutine will receive one argument:
 # a zero termianted string containing the code to execute.
@@ -30,36 +28,36 @@ brainfuck:
 	#index of our array
 	xorq %rbx, %rbx
 
-	#the cool way to set r14 to 0
-	xorq %r14, %r14
-
-	movq $50000000, %r13
-
-	movq $0, %r14
+	jmp next_action
 
 
-# loop through te brainfuck code
-compare:	
-	cmpq $0, %r13
-	jge printloop
+start_counter:
+	movq $1, %r14
 
-elseprint:
-	movq %rbp, %rsp
-	popq %rbp
-	ret
+counter:
+	cmpq $0, %r14
+	jmp next_action
+
+	incq %r12
+
+	movb (%r12), %r15b
+
+	cmpb $91, %r15b
+	je inc14
+
+	cmpb $93, %r15b
+	je dec14
+
+	jmp counter
+
 
 # print each brainfuck character
-printloop:
-
-
+next_action:
 
 	#store the bit value of the character into r15b
 	movb (%r12), %r15b
 
-
-	#go to the next char
 	incq %r12
-
 
 	#check if we reached the end of the file
 	cmpb $0, %r15b	
@@ -96,106 +94,75 @@ printloop:
 
 	# ] sign
 	cmpb $93, %r15b
-	je foundright
+	je loop_end
 
-	# unknown character -> go next 
-	jmp compare
+	jmp next_action
 
-
-thing:
-	popq %r12
-	pushq %r12
-	jmp printloop
-
-
-skip:
-	
-	incq %r12
-
-	movb (%r12), %r15b
-
-	cmpb $91, %r15b
-	je inc14
-
-	cmpb $93, %r15b
-	je dec14
-
-	cmpq $0, %r14
-	je printloop
-
-	jmp skip
 
 inc14:
 	incq %r14
-	jmp skip
+	jmp counter
+
 
 dec14:
 	decq %r14
-	cmpq $0, %r14
-	je printloop
-	jmp skip
+	jmp counter
 		
 
 # Increments the value the pointer is pointing at
 foundplus:
 	incq myarray(%rbx)	
-	jmp printloop
+	jmp next_action
 
 # Decrements the value the pointer is pointing at
 foundminus:
 
 	decq myarray(%rbx)
-	jmp printloop
+	jmp next_action
 
 # Increments the pointer
 foundgreater:
 	incq %rbx
-	jmp printloop
+	jmp next_action
 
 # Deccrements the pointer
 foundsmaller:
 
 	decq %rbx
-	jmp printloop
+	jmp next_action
 
 # Prints the value the pointer is pointing at
 founddot:
 	# the cool way of printing
-	xorq %rsi, %rsi
-	movb myarray(%rbx), %sil
+
+	movq $0, %rax
+	movq myarray(%rbx), %rsi
 	movq $bfoutput, %rdi
-	xorq %rax, %rax
 	call printf
 
 
-	jmp printloop
+	jmp next_action
 
-# pushes the location of the [ to the stack
 foundleft:
-	cmpb $0, myarray(%rbx)
-	je skip
-	
+	cmpq $0, myarray(%rbx)
+	je start_counter
+
 	push %r12
 
-	# store the location of the [ and go to the next character
-	jmp printloop
+	jmp next_action
 
-foundright:
 
-	# should we find the value 0 then we evaluate the next character by jumping to our loop
+loop_end:
 	cmpb $0, myarray(%rbx)
-	je printloop
-	
+	je happy_stack
 
-	cmpq $1, myarray(%rbx)
-	jne thing
+	popq %r12
+	decq %r12
+	jmp next_action
 
-	popq %r12 			
-
-	jmp printloop
-
-
-
+happy_stack:
+	popq %r13
+	jmp next_action
 
 
 # rip brainfuck
