@@ -10,7 +10,7 @@ bfinput: .asciz "%c"
 
 .data
 myarray: 
-.skip 50000000
+.skip 30000
 
 
 # Your brainfuck subroutine will receive one argument:
@@ -52,13 +52,6 @@ printloop:
 	je end
 
 	#we compare here
-	# + sign
-	cmpb $43, %r11b
-	je foundplus
-
-	# - sign
-	cmpb $45, %r11b
-	je foundminus
 
 	# > sign
 	cmpb $62, %r11b
@@ -68,13 +61,9 @@ printloop:
 	cmpb $60, %r11b
 	je foundsmaller
 
-	# . sign 
-	cmpb $46, %r11b
-	je founddot
-
-	# , sign
-	cmpb $44, %r11b
-	je foundcomma
+	# + sign
+	cmpb $43, %r11b
+	je foundplus
 
 	# [ sign 
 	cmpb $91, %r11b
@@ -83,6 +72,18 @@ printloop:
 	# ] sign
 	cmpb $93, %r11b
 	je foundright
+
+	# - sign
+	cmpb $45, %r11b
+	je foundminus
+
+	# . sign 
+	cmpb $46, %r11b
+	je founddot
+
+	# , sign
+	cmpb $44, %r11b
+	je foundcomma
 
 	incq %r12
 	jmp printloop
@@ -189,14 +190,17 @@ skip:
 
 	movb (%r12), %r11b
 
+	# [ sign 
 	cmpb $91, %r11b
 	je inc14
 
+	# ] sign 
 	cmpb $93, %r11b
 	je dec14
 
 	jmp skip
 
+# goes to the next char if the counter is 0
 next:
 	incq %r12
 	jmp printloop
