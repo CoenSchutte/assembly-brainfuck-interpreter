@@ -10,7 +10,7 @@ bfinput: .asciz "%c"
 
 .data
 myarray: 
-.skip 30000
+.skip 50000000
 
 
 # Your brainfuck subroutine will receive one argument:
@@ -32,7 +32,7 @@ brainfuck:
 	#index of our array set to 0 in a fancy way
 	movq $0, %r15
 
-	jmp first_action
+	jmp printloop
 
 # rip brainfuck
 end:
@@ -40,11 +40,9 @@ end:
 	popq %rbp
 	ret
 
-next_action:
-	incq %r12
 
 # print each brainfuck character
-first_action:
+printloop:
 
 	#store the bit value of the character into r11b
 	movb (%r12), %r11b
@@ -84,9 +82,10 @@ first_action:
 
 	# ] sign
 	cmpb $93, %r11b
-	je loop_end
+	je foundright
 
-	jmp next_action
+	incq %r12
+	jmp printloop
 		
 
 foundcomma:
@@ -109,28 +108,33 @@ foundcomma:
 	movq %rbp, %rsp
 	popq %rbp
 
-		jmp next_action
+		incq %r12
+		jmp printloop
 
 
 # Increments the value the pointer is pointing at
 foundplus:
 	incb myarray(%r15)	
-	jmp next_action
+	incq %r12
+	jmp printloop
 
 # Decrements the value the pointer is pointing at
 foundminus:
 	decb myarray(%r15)
-	jmp next_action
+	incq %r12
+	jmp printloop
 
 # Increments the pointer
 foundgreater:
 	incq %r15
-	jmp next_action
+	incq %r12
+	jmp printloop
 
 # Deccrements the pointer
 foundsmaller:
 	decq %r15
-	jmp next_action
+	incq %r12
+	jmp printloop
 
 
 # Prints the value the pointer is pointing at
@@ -140,7 +144,8 @@ founddot:
 	movq $bfoutput, %rdi
 	call printf
 
-	jmp next_action
+	incq %r12
+	jmp printloop
 
 # we found a left bracket and push it's location to the stack
 foundleft:
@@ -150,7 +155,9 @@ foundleft:
 
 	pushq %r12
 	pushq %r12
-	jmp next_action
+
+	incq %r12
+	jmp printloop
 
 # initializes our counter
 start_counter:
@@ -159,7 +166,7 @@ start_counter:
 #counts the amount of brackets
 counter:
 	cmpq $0, %r14
-	je next_action
+	je next
 
 	incq %r12
 
@@ -173,6 +180,10 @@ counter:
 
 	jmp counter
 
+next:
+	incq %r12
+	jmp printloop
+
 # increment our bracket counter
 inc14:
 	incq %r14
@@ -184,7 +195,7 @@ dec14:
 	jmp counter
 
 # we found a right bracket and check if it matches
-loop_end:
+foundright:
 	cmpb $0, myarray(%r15)
 	je happy_stack
 
@@ -193,13 +204,16 @@ loop_end:
 	push %r12
 	push %r12
 
-	jmp next_action
+	incq %r12
+	jmp printloop
 
-# makes the stack happy
+# makes the stack happy :)
 happy_stack:
 	popq %rbx
 	popq %rbx
-	jmp next_action
+
+	incq %r12
+	jmp printloop
 
 
 
