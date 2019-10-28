@@ -31,16 +31,22 @@ brainfuck:
 	#index of our array set to 0 in a fancy way
 	movq $0, %r15
 
-	jmp next_action
+	jmp first_action
 
+# rip brainfuck
+end:
+	movq %rbp, %rsp
+	popq %rbp
+	ret
+
+next_action:
+	incq %r12
 
 # print each brainfuck character
-next_action:
+first_action:
 
 	#store the bit value of the character into r11b
 	movb (%r12), %r11b
-
-	incq %r12
 
 	#check if we reached the end of the file
 	cmpb $0, %r11b	
@@ -80,12 +86,12 @@ next_action:
 
 # Increments the value the pointer is pointing at
 foundplus:
-	incq myarray(%r15)	
+	incb myarray(%r15)	
 	jmp next_action
 
 # Decrements the value the pointer is pointing at
 foundminus:
-	decq myarray(%r15)
+	decb myarray(%r15)
 	jmp next_action
 
 # Increments the pointer
@@ -108,21 +114,23 @@ founddot:
 
 	jmp next_action
 
+# we found a left bracket and push it's location to the stack
 foundleft:
-	cmpq $0, myarray(%r15)
+
+	cmpb $0, myarray(%r15)
 	je start_counter
 
-	push %r12
-
+	pushq %r12
 	jmp next_action
 
-
+# initializes our counter
 start_counter:
 	movq $1, %r14
 
+#counts the amount of brackets
 counter:
 	cmpq $0, %r14
-	jmp next_action
+	je next_action
 
 	incq %r12
 
@@ -136,31 +144,30 @@ counter:
 
 	jmp counter
 
-
+# increment our bracket counter
 inc14:
 	incq %r14
 	jmp counter
 
-
+# decrement our bracket counter
 dec14:
 	decq %r14
 	jmp counter
 
+# we found a right bracket and check if it matches
 loop_end:
 	cmpb $0, myarray(%r15)
 	je happy_stack
 
 	popq %r12
-	decq %r12
+	push %r12
+
 	jmp next_action
 
+# makes the stack happy
 happy_stack:
 	popq %rbx
 	jmp next_action
 
 
-# rip brainfuck
-end:
-	movq %rbp, %rsp
-	popq %rbp
-	ret
+
