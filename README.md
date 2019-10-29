@@ -21,7 +21,7 @@
 
 Feel free to have a look at the different files, but keep in mind that all you need to do is:
 
-  1. Edit `brainfuck.s`
-  2. Run `make`
+
+  1. Run `make`
   3. Run `./brainfuck <filename>`
 
