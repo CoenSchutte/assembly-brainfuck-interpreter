@@ -1,6 +1,5 @@
 # caschutte & ebdemir
 
-
 .global brainfuck
 
 .text
@@ -18,40 +17,35 @@ myarray:
 
 
 brainfuck:
-	#create a stackframe
+	# Create a stackframe
 	pushq %rbp
 	movq %rsp, %rbp
 	
-	#printing the brainfuck code
+	# printing the brainfuck code
 	movq %rdi, %r12		
 	movq %rdi, %rsi
 	movq $format_str, %rdi
 	call printf
-	xorq %rax, %rax
 
-	#index of our array set to 0 in a fancy way
+	# index of our array set to 0 in a fancy way
 	xorq %r15, %r15
 
 	jmp printloop
 
-# rip brainfuck
-end:
-	movq %rbp, %rsp
-	popq %rbp
-	ret
+
 
 
 # print each brainfuck character
 printloop:
 
-	#store the bit value of the character into r11b
+	# store the bit value of the character into r11b
 	movb (%r12), %r11b
 
-	#check if we reached the end of the file
+	# check if we reached the end of the file
 	cmpb $0, %r11b	
 	je end
 
-	#we compare here
+	# we compare here
 
 	# > sign
 	cmpb $62, %r11b
@@ -91,23 +85,23 @@ printloop:
 
 foundcomma:
 
-	#create a stackframe
+	# create a stackframe
 	pushq %rbp
 	movq %rsp, %rbp
 
-	#Scan for a number
+	# Scan for a number
     subq $8, %rsp                   # increase the stack by 8
     leaq -8(%rbp), %rsi             # move the base pointer to rsi load effective address
     movq $bfinput, %rdi           	# move the string format for scanf to rdi
     movq $0, %rax
     call scanf                      # scans for a number 
 
-	#Stores the input in a proper way
+	# Stores the input in a proper way
 	movb -8(%rbp), %bl
 	movb %bl, myarray(%r15)
 	popq %rbx
 
-	#close the stackframe
+	# close the stackframe
 	movq %rbp, %rsp
 	popq %rbp
 
@@ -156,7 +150,7 @@ foundleft:
 	cmpb $0, myarray(%r15)
 	je start_skip
 
-	#Stack allignment is cool, we need this for the comma to work
+	# Stack allignment is cool, we need this for the comma to work
 	pushq %r12
 	pushq %r12
 
@@ -180,14 +174,16 @@ foundright:
 # initializes our counter
 start_skip:
 	movq $1, %r14
+	jmp skip
 
-#counts the amount of brackets
+# counts the amount of brackets
 skip:
+	# checks whether the counter is 0, if so, we check the next character
 	cmpq $0, %r14
 	je next
 
+	# checks whether the next character is a [ or a ]
 	incq %r12
-
 	movb (%r12), %r11b
 
 	# [ sign 
@@ -217,7 +213,7 @@ dec14:
 
 # makes the stack happy :)
 happy_stack:
-	#Stack allignment is cool, we need this for the comma to work
+	# Stack allignment is cool, we need this for the comma to work
 	popq %rbx
 	popq %rbx
 
@@ -226,3 +222,9 @@ happy_stack:
 
 
 
+# rip brainfuck
+end:
+	movq %rbp, %rsp
+	popq %rbp
+	ret
+	
